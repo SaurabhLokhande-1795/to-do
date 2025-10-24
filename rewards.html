@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster - Rewards</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gradient-shift {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        body {
+            background: linear-gradient(-45deg, #667eea, #764ba2, #f093fb, #4facfe, #667eea);
+            background-size: 400% 400%;
+            animation: gradient-shift 15s ease infinite;
+        }
+        .achievement-card {
+            transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .achievement-card:hover {
+            transform: translateY(-15px) scale(1.1) rotate(5deg);
+        }
+        .locked {
+            filter: grayscale(100%) brightness(0.7);
+            opacity: 0.5;
+        }
+        .locked:hover {
+            transform: translateY(-5px) scale(1.05);
+        }
+        .shine {
+            position: relative;
+            overflow: hidden;
+        }
+        .shine::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent,
+                rgba(255, 255, 255, 0.4),
+                transparent
+            );
+            transform: rotate(45deg);
+            animation: shine 3s infinite;
+        }
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+        .trophy {
+            animation: trophy-bounce 2s ease-in-out infinite;
+        }
+        @keyframes trophy-bounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); }
+        }
+        .points-pulse {
+            animation: points-pulse 2s ease-in-out infinite;
+        }
+        @keyframes points-pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .sparkle {
+            position: absolute;
+            animation: sparkle 1.5s ease-out;
+        }
+        @keyframes sparkle {
+            0% { transform: scale(0) rotate(0deg); opacity: 1; }
+            100% { transform: scale(1) rotate(180deg); opacity: 0; }
+        }
+        .level-bar {
+            transition: width 1s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .medal-spin {
+            animation: medal-spin 20s linear infinite;
+        }
+        @keyframes medal-spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .pop-in {
+            animation: pop-in 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        @keyframes pop-in {
+            0% { transform: scale(0); opacity: 0; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white bg-opacity-90 backdrop-blur-xl shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">TaskMaster</h1>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="dashboard.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Today</a>
+                    <a href="monthly.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Monthly</a>
+                    <a href="rewards.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg transform hover:scale-105 transition shadow-lg">Rewards</a>
+                    <a href="records.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Records</a>
+                    <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header with Points -->
+        <div class="text-center mb-12">
+            <div class="inline-block bg-white bg-opacity-95 backdrop-blur-xl rounded-3xl px-12 py-8 shadow-2xl mb-6 shine pop-in">
+                <div class="flex items-center space-x-6">
+                    <span class="text-8xl trophy">🏆</span>
+                    <div class="text-left">
+                        <p class="text-gray-600 text-lg font-bold mb-2">Total Points</p>
+                        <p class="text-7xl font-black bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent points-pulse" id="totalPoints">0</p>
+                        <div class="flex items-center mt-2 space-x-2">
+                            <div class="flex">
+                                <span class="text-2xl">⭐</span>
+                                <span class="text-2xl">⭐</span>
+                                <span class="text-2xl">⭐</span>
+                                <span class="text-2xl">⭐</span>
+                                <span class="text-2xl">⭐</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <h2 class="text-6xl font-black text-white mb-4 drop-shadow-lg">Rewards & Achievements</h2>
+            <p class="text-purple-100 text-2xl font-semibold">Complete tasks on time to earn points and unlock badges!</p>
+        </div>
+
+        <!-- Points Breakdown -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
+            <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl text-center transform hover:scale-105 transition-all duration-300 pop-in" style="animation-delay: 0.1s">
+                <div class="text-6xl mb-4">✅</div>
+                <p class="text-gray-600 text-sm font-bold mb-2">Tasks Completed</p>
+                <p class="text-5xl font-black text-green-600" id="tasksCompleted">0</p>
+                <div class="mt-4 bg-green-100 rounded-full px-4 py-2">
+                    <p class="text-xs text-green-700 font-bold">+5 points each</p>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl text-center transform hover:scale-105 transition-all duration-300 pop-in" style="animation-delay: 0.2s">
+                <div class="text-6xl mb-4">⏰</div>
+                <p class="text-gray-600 text-sm font-bold mb-2">On-Time Completions</p>
+                <p class="text-5xl font-black text-blue-600" id="onTimeCompleted">0</p>
+                <div class="mt-4 bg-blue-100 rounded-full px-4 py-2">
+                    <p class="text-xs text-blue-700 font-bold">+10 bonus points</p>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl text-center transform hover:scale-105 transition-all duration-300 pop-in" style="animation-delay: 0.3s">
+                <div class="text-6xl mb-4">🔥</div>
+                <p class="text-gray-600 text-sm font-bold mb-2">Current Streak</p>
+                <p class="text-5xl font-black text-orange-600" id="currentStreak">0</p>
+                <div class="mt-4 bg-orange-100 rounded-full px-4 py-2">
+                    <p class="text-xs text-orange-700 font-bold">Days in a row</p>
+                </div>
+            </div>
+            <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-2xl p-8 shadow-2xl text-center transform hover:scale-105 transition-all duration-300 pop-in" style="animation-delay: 0.4s">
+                <div class="text-6xl mb-4">🎖️</div>
+                <p class="text-gray-600 text-sm font-bold mb-2">Badges Earned</p>
+                <p class="text-5xl font-black text-purple-600" id="badgesEarned">0</p>
+                <div class="mt-4 bg-purple-100 rounded-full px-4 py-2">
+                    <p class="text-xs text-purple-700 font-bold">Out of 12</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Level Progress -->
+        <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-3xl shadow-2xl p-10 mb-12 transform hover:scale-[1.02] transition-all duration-300">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="text-4xl font-black text-gray-800 mb-2">Your Level</h3>
+                    <p class="text-gray-600 text-lg font-semibold">Keep completing tasks to level up! 🚀</p>
+                </div>
+                <div class="text-center bg-gradient-to-br from-purple-500 to-indigo-600 rounded-3xl p-8 shadow-2xl transform hover:rotate-12 transition-all duration-300">
+                    <div class="text-7xl font-black text-white" id="userLevel">1</div>
+                    <p class="text-white font-bold text-lg mt-2">Level</p>
+                </div>
+            </div>
+            <div class="relative">
+                <div class="w-full bg-gray-200 rounded-full h-8 overflow-hidden shadow-inner">
+                    <div id="levelProgress" class="level-bar bg-gradient-to-r from-purple-500 via-pink-500 to-indigo-600 h-8 rounded-full transition-all duration-1000 flex items-center justify-end pr-4" style="width: 0%">
+                        <span class="text-white font-bold text-sm" id="progressText"></span>
+                    </div>
+                </div>
+                <p class="text-center text-gray-700 text-lg font-bold mt-4">
+                    <span id="currentLevelPoints">0</span> / <span id="nextLevelPoints">100</span> points to next level
+                </p>
+            </div>
+        </div>
+
+        <!-- Achievements Grid -->
+        <h3 class="text-5xl font-black text-white mb-8 text-center drop-shadow-lg">
+            🏅 Your Achievements
+        </h3>
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-12" id="achievementsGrid">
+            <!-- Achievements will be dynamically added -->
+        </div>
+
+        <!-- Leaderboard -->
+        <div class="bg-white bg-opacity-95 backdrop-blur-xl rounded-3xl shadow-2xl p-10">
+            <div class="flex items-center justify-center mb-8">
+                <span class="text-6xl mr-4 medal-spin">🏆</span>
+                <h3 class="text-4xl font-black text-gray-800">Top Performers</h3>
+            </div>
+            <div class="space-y-4" id="leaderboard">
+                <!-- Leaderboard entries will be added here -->
+            </div>
+        </div>
+    </div>
+
+    <script src="api.js"></script>
+<script>
+    const achievements = [
+        { id: 1, name: 'First Step', icon: '🎯', desc: 'Complete your first task', requirement: 1, unlocked: false },
+        { id: 2, name: 'Getting Started', icon: '🚀', desc: 'Complete 10 tasks', requirement: 10, unlocked: false },
+        { id: 3, name: 'Task Master', icon: '⭐', desc: 'Complete 50 tasks', requirement: 50, unlocked: false },
+        { id: 4, name: 'Century Club', icon: '💯', desc: 'Complete 100 tasks', requirement: 100, unlocked: false },
+        { id: 5, name: 'Punctual', icon: '⏰', desc: 'Complete 5 tasks on time', requirement: 5, unlocked: false },
+        { id: 6, name: 'Time Lord', icon: '⌚', desc: 'Complete 25 tasks on time', requirement: 25, unlocked: false },
+        { id: 7, name: 'Hot Streak', icon: '🔥', desc: '7 day streak', requirement: 7, unlocked: false },
+        { id: 8, name: 'Unstoppable', icon: '💪', desc: '30 day streak', requirement: 30, unlocked: false },
+        { id: 9, name: 'Early Bird', icon: '🌅', desc: 'Complete a task before 8 AM', requirement: 1, unlocked: false },
+        { id: 10, name: 'Night Owl', icon: '🦉', desc: 'Complete a task after 10 PM', requirement: 1, unlocked: false },
+        { id: 11, name: 'Perfectionist', icon: '✨', desc: 'Complete all daily tasks for a week', requirement: 7, unlocked: false },
+        { id: 12, name: 'Legend', icon: '👑', desc: 'Reach 1000 points', requirement: 1000, unlocked: false }
+    ];
+
+    let leaderboardData = [];
+
+    // Check authentication
+    if (!getToken()) {
+        window.location.href = 'login.html';
+    }
+
+    function init() {
+        loadUserStats();
+        renderAchievements();
+        loadLeaderboard();
+        createSparkles();
+    }
+
+    async function loadUserStats() {
+        try {
+            const response = await rewardsAPI.get();
+            const rewards = response.rewards;
+
+            // Animate stats
+            animateValue('totalPoints', 0, rewards.totalPoints, 2000);
+            animateValue('tasksCompleted', 0, rewards.tasksCompleted, 1500);
+            animateValue('onTimeCompleted', 0, rewards.onTimeCompleted, 1500);
+            animateValue('currentStreak', 0, rewards.currentStreak, 1500);
+            
+            document.getElementById('userLevel').textContent = rewards.level;
+
+            const pointsInLevel = rewards.totalPoints % 100;
+            
+            setTimeout(() => {
+                document.getElementById('levelProgress').style.width = `${pointsInLevel}%`;
+                document.getElementById('progressText').textContent = `${pointsInLevel}%`;
+            }, 500);
+            
+            document.getElementById('currentLevelPoints').textContent = pointsInLevel;
+            document.getElementById('nextLevelPoints').textContent = 100;
+
+            // Update achievements with unlocked status
+            rewards.unlockedAchievements.forEach(achievementId => {
+                const achievement = achievements.find(a => a.id === achievementId);
+                if (achievement) {
+                    achievement.unlocked = true;
+                }
+            });
+
+            setTimeout(() => {
+                animateValue('badgesEarned', 0, rewards.badgesEarned, 1500);
+            }, 500);
+
+            renderAchievements();
+        } catch (error) {
+            console.error('Error loading rewards:', error);
+            showNotification('Failed to load rewards', 'error');
+        }
+    }
+
+    async function loadLeaderboard() {
+        try {
+            const response = await rewardsAPI.getLeaderboard();
+            leaderboardData = response.leaderboard;
+            renderLeaderboard();
+        } catch (error) {
+            console.error('Error loading leaderboard:', error);
+        }
+    }
+
+    function renderAchievements() {
+        const grid = document.getElementById('achievementsGrid');
+        grid.innerHTML = achievements.map((achievement, index) => `
+            <div class="achievement-card ${achievement.unlocked ? 'shine' : 'locked'} bg-white bg-opacity-95 backdrop-blur-xl rounded-3xl p-8 shadow-2xl text-center pop-in" style="animation-delay: ${index * 0.1}s">
+                <div class="text-8xl mb-4 ${achievement.unlocked ? 'animate-bounce' : ''}">${achievement.icon}</div>
+                <h4 class="font-black text-gray-800 text-xl mb-3">${achievement.name}</h4>
+                <p class="text-sm text-gray-600 mb-4 font-semibold">${achievement.desc}</p>
+                ${achievement.unlocked ? 
+                    '<span class="inline-block bg-gradient-to-r from-green-500 to-emerald-600 text-white text-sm px-4 py-2 rounded-full font-bold shadow-lg">Unlocked ✓</span>' : 
+                    '<span class="inline-block bg-gray-300 text-gray-600 text-sm px-4 py-2 rounded-full font-bold">🔒 Locked</span>'
+                }
+            </div>
+        `).join('');
+    }
+
+    function renderLeaderboard() {
+        const leaderboard = document.getElementById('leaderboard');
+        
+        if (leaderboardData.length === 0) {
+            leaderboard.innerHTML = `
+                <div class="text-center py-12">
+                    <div class="text-6xl mb-4">🏆</div>
+                    <p class="text-gray-500 text-lg font-semibold">No leaderboard data yet</p>
+                </div>
+            `;
+            return;
+        }
+
+        leaderboard.innerHTML = leaderboardData.map((user, index) => {
+            const medals = ['🥇', '🥈', '🥉'];
+            const borderColors = ['border-yellow-400', 'border-gray-300', 'border-orange-400'];
+
+            return `
+                <div class="flex items-center justify-between p-6 rounded-2xl ${user.isCurrentUser ? 'bg-gradient-to-r from-purple-100 to-indigo-100 ring-4 ring-purple-500' : 'bg-gradient-to-r from-gray-50 to-gray-100'} shadow-lg hover:shadow-2xl transition-all transform hover:scale-[1.02] pop-in" style="animation-delay: ${index * 0.1}s">
+                    <div class="flex items-center space-x-6">
+                        <div class="w-16 h-16 ${user.rank <= 3 ? 'bg-gradient-to-br from-yellow-400 to-orange-500' : 'bg-gradient-to-br from-gray-300 to-gray-400'} rounded-2xl flex items-center justify-center font-black text-white text-2xl shadow-xl border-4 ${borderColors[user.rank - 1] || 'border-gray-200'}">
+                            ${user.rank <= 3 ? medals[user.rank - 1] : user.rank}
+                        </div>
+                        <div class="text-6xl">${user.avatar}</div>
+                        <div>
+                            <p class="font-black text-gray-800 text-2xl ${user.isCurrentUser ? 'text-purple-600' : ''}">${user.name}</p>
+                            <div class="flex items-center space-x-3 mt-1">
+                                <p class="text-lg text-gray-600 font-bold">⭐ ${user.points} points</p>
+                                <span class="bg-purple-500 text-white text-xs px-3 py-1 rounded-full font-bold">Level ${user.level}</span>
+                            </div>
+                        </div>
+                    </div>
+                    ${user.rank <= 3 ? `<div class="text-6xl">${medals[user.rank - 1]}</div>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    function animateValue(id, start, end, duration) {
+        const element = document.getElementById(id);
+        const range = end - start;
+        const increment = range / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                current = end;
+                clearInterval(timer);
+            }
+            element.textContent = Math.round(current);
+        }, 16);
+    }
+
+    function createSparkles() {
+        const colors = ['#FFD700', '#FFA500', '#FF69B4', '#00CED1', '#9370DB'];
+        setInterval(() => {
+            const sparkle = document.createElement('div');
+            sparkle.className = 'sparkle';
+            sparkle.style.left = Math.random() * 100 + '%';
+            sparkle.style.top = Math.random() * 100 + '%';
+            sparkle.style.width = '10px';
+            sparkle.style.height = '10px';
+            sparkle.style.background = colors[Math.floor(Math.random() * colors.length)];
+            sparkle.style.borderRadius = '50%';
+            sparkle.innerHTML = '✨';
+            sparkle.style.fontSize = Math.random() * 20 + 10 + 'px';
+            document.body.appendChild(sparkle);
+            setTimeout(() => sparkle.remove(), 1500);
+        }, 2000);
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-20 right-4 bg-white px-6 py-4 rounded-2xl shadow-2xl z-50 transform translate-x-full transition-all duration-500 border-l-4 ${
+            type === 'success' ? 'border-green-500' : type === 'error' ? 'border-red-500' : 'border-blue-500'
+        }`;
+        notification.innerHTML = `<p class="font-bold text-gray-800">${message}</p>`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+        setTimeout(() => {
+            notification.style.transform = 'translateX(150%)';
+            setTimeout(() => notification.remove(), 500);
+        }, 3000);
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            authAPI.logout();
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>

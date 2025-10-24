@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TaskMaster - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @keyframes gradient {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        body {
+            background: linear-gradient(-45deg, #e3f2fd, #f3e5f5, #fce4ec, #e8f5e9);
+            background-size: 400% 400%;
+            animation: gradient 20s ease infinite;
+        }
+        .task-card {
+            transition: all 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        .task-card:hover {
+            transform: translateX(10px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }
+        .completed {
+            animation: fadeOut 0.5s ease;
+        }
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0.6; }
+        }
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+            animation: rotate 10s linear infinite;
+        }
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        .pulse-ring {
+            animation: pulse-ring 1.5s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+        }
+        @keyframes pulse-ring {
+            0% { transform: scale(0.95); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(0.95); opacity: 1; }
+        }
+        .slide-in {
+            animation: slideIn 0.5s ease-out;
+        }
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: #f0f;
+            position: absolute;
+            animation: confetti-fall 3s linear;
+        }
+        @keyframes confetti-fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+                opacity: 0;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+    <!-- Navigation -->
+    <nav class="bg-white bg-opacity-90 backdrop-blur-xl shadow-xl sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-2 rounded-xl">
+                        <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                        </svg>
+                    </div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-purple-600 to-indigo-600 bg-clip-text text-transparent">TaskMaster</h1>
+                </div>
+                <div class="flex space-x-2">
+                    <a href="dashboard.html" class="px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-semibold rounded-lg transform hover:scale-105 transition shadow-lg">Today</a>
+                    <a href="monthly.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Monthly</a>
+                    <a href="rewards.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Rewards</a>
+                    <a href="records.html" class="px-4 py-2 text-gray-600 hover:bg-purple-50 rounded-lg font-semibold transition">Records</a>
+                    <button onclick="logout()" class="px-4 py-2 text-red-600 hover:bg-red-50 rounded-lg font-semibold transition">Logout</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <div class="max-w-7xl mx-auto px-4 py-8">
+        <!-- Header Section with Animation -->
+        <div class="mb-8 slide-in">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h2 class="text-5xl font-bold text-gray-800 mb-2">
+                        Hello, <span id="userName" class="bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent">User</span>! 
+                        <span class="inline-block animate-bounce">👋</span>
+                    </h2>
+                    <p class="text-gray-600 text-lg" id="currentDate"></p>
+                </div>
+                <div class="text-6xl animate-bounce">
+                    <div id="motivationalEmoji">💪</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Cards with Enhanced Design -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div class="stat-card bg-gradient-to-br from-purple-500 to-purple-700 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105 pulse-ring">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-purple-100 text-sm font-semibold">Total Tasks</p>
+                            <p class="text-5xl font-bold text-white mt-2" id="totalTasks">0</p>
+                            <p class="text-purple-200 text-xs mt-2">Keep it up! 🎯</p>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-2xl">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-green-500 to-emerald-700 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-green-100 text-sm font-semibold">Completed</p>
+                            <p class="text-5xl font-bold text-white mt-2" id="completedTasks">0</p>
+                            <p class="text-green-200 text-xs mt-2">Awesome work! ✨</p>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-2xl">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-yellow-500 to-orange-600 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-yellow-100 text-sm font-semibold">Pending</p>
+                            <p class="text-5xl font-bold text-white mt-2" id="pendingTasks">0</p>
+                            <p class="text-yellow-200 text-xs mt-2">Let's do this! 🔥</p>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-2xl">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card bg-gradient-to-br from-indigo-500 to-purple-700 rounded-2xl p-6 shadow-2xl hover:shadow-3xl transition-all duration-300 transform hover:scale-105">
+                <div class="relative z-10">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-indigo-100 text-sm font-semibold">Points</p>
+                            <p class="text-5xl font-bold text-white mt-2" id="totalPoints">0</p>
+                            <p class="text-indigo-200 text-xs mt-2">You're a star! ⭐</p>
+                        </div>
+                        <div class="bg-white bg-opacity-20 p-4 rounded-2xl">
+                            <svg class="w-10 h-10 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Task Section with Enhanced Design -->
+        <div class="bg-white bg-opacity-80 backdrop-blur-xl rounded-2xl shadow-2xl p-8 mb-8 transform hover:scale-[1.01] transition-all duration-300">
+            <div class="flex items-center mb-6">
+                <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-xl mr-4">
+                    <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                    </svg>
+                </div>
+                <h3 class="text-3xl font-bold text-gray-800">Add New Task</h3>
+            </div>
+            <form onsubmit="addTask(event)" class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <input type="text" id="taskTitle" placeholder="✍️ Task title" required
+                    class="px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 font-medium">
+                <input type="time" id="taskTime" required
+                    class="px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300">
+                <select id="taskPriority" required
+                    class="px-4 py-4 border-2 border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-300 font-medium">
+                    <option value="low">🟢 Low Priority</option>
+                    <option value="medium" selected>🟡 Medium Priority</option>
+                    <option value="high">🔴 High Priority</option>
+                </select>
+                <button type="submit"
+                    class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white py-4 rounded-xl font-bold hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-2xl">
+                    ➕ Add Task
+                </button>
+            </form>
+        </div>
+
+        <!-- Tasks List with Enhanced Design -->
+        <div class="bg-white bg-opacity-80 backdrop-blur-xl rounded-2xl shadow-2xl p-8">
+            <div class="flex justify-between items-center mb-8">
+                <div class="flex items-center">
+                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-3 rounded-xl mr-4">
+                        <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                        </svg>
+                    </div>
+                    <h3 class="text-3xl font-bold text-gray-800">Today's Tasks</h3>
+                </div>
+                <div class="flex space-x-2">
+                    <button onclick="filterTasks('all')" id="filterAll" class="px-5 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl text-sm font-bold shadow-lg transform hover:scale-105 transition">All</button>
+                    <button onclick="filterTasks('pending')" id="filterPending" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transform hover:scale-105 transition">Pending</button>
+                    <button onclick="filterTasks('completed')" id="filterCompleted" class="px-5 py-2 bg-gray-100 text-gray-700 rounded-xl text-sm font-bold hover:bg-gray-200 transform hover:scale-105 transition">Completed</button>
+                </div>
+            </div>
+
+            <div id="tasksList" class="space-y-4">
+                <!-- Tasks will be dynamically added here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Confetti container -->
+    <div id="confettiContainer"></div>
+
+   <script src="api.js"></script>
+<script>
+    let tasks = [];
+    let currentFilter = 'all';
+
+    // Check authentication
+    if (!getToken()) {
+        window.location.href = 'login.html';
+    }
+
+    // Motivational emojis
+    const emojis = ['💪', '🚀', '⚡', '🔥', '✨', '🎯', '👊', '💯'];
+    let emojiIndex = 0;
+
+    // Initialize
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+    });
+
+    // Display user name
+    const user = getUser();
+    document.getElementById('userName').textContent = user.name || 'User';
+
+    // Rotate motivational emoji
+    setInterval(() => {
+        emojiIndex = (emojiIndex + 1) % emojis.length;
+        document.getElementById('motivationalEmoji').textContent = emojis[emojiIndex];
+    }, 3000);
+
+    // Load tasks from backend
+    async function loadTasks() {
+        try {
+            const response = await tasksAPI.getToday();
+            tasks = response.tasks || [];
+            renderTasks();
+            updateStats();
+        } catch (error) {
+            console.error('Error loading tasks:', error);
+            showNotification('Failed to load tasks', 'error');
+        }
+    }
+
+    function renderTasks() {
+        const tasksList = document.getElementById('tasksList');
+        const filteredTasks = tasks.filter(task => {
+            if (currentFilter === 'all') return true;
+            if (currentFilter === 'pending') return !task.completed;
+            if (currentFilter === 'completed') return task.completed;
+        });
+
+        if (filteredTasks.length === 0) {
+            tasksList.innerHTML = `
+                <div class="text-center py-16">
+                    <div class="text-8xl mb-4 animate-bounce">🎉</div>
+                    <p class="text-gray-500 text-xl font-semibold">No tasks found</p>
+                    <p class="text-gray-400 mt-2">Add some tasks to get started!</p>
+                </div>
+            `;
+            return;
+        }
+
+        tasksList.innerHTML = filteredTasks.map((task, index) => {
+            const priorityStyles = {
+                high: 'bg-gradient-to-r from-red-50 to-red-100 border-l-4 border-red-500',
+                medium: 'bg-gradient-to-r from-yellow-50 to-yellow-100 border-l-4 border-yellow-500',
+                low: 'bg-gradient-to-r from-green-50 to-green-100 border-l-4 border-green-500'
+            };
+
+            const priorityIcons = { high: '🔴', medium: '🟡', low: '🟢' };
+
+            return `
+                <div class="task-card slide-in flex items-center justify-between p-6 ${priorityStyles[task.priority]} rounded-2xl ${task.completed ? 'completed opacity-60' : ''}" style="animation-delay: ${index * 0.1}s">
+                    <div class="flex items-center space-x-4 flex-1">
+                        <div class="relative">
+                            <input type="checkbox" ${task.completed ? 'checked' : ''} 
+                                onchange="toggleTask('${task._id}')"
+                                class="w-6 h-6 text-purple-600 rounded-lg focus:ring-2 focus:ring-purple-500 cursor-pointer transform hover:scale-110 transition">
+                        </div>
+                        <div class="flex-1">
+                            <h4 class="font-bold text-gray-800 text-lg ${task.completed ? 'line-through' : ''}">${task.title}</h4>
+                            <p class="text-sm text-gray-600 mt-1">
+                                <span class="inline-flex items-center">
+                                    ⏰ ${task.time} | ${priorityIcons[task.priority]} Priority: ${task.priority.toUpperCase()}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="editTask('${task._id}')" class="px-4 py-2 bg-blue-500 text-white rounded-xl text-sm font-bold hover:bg-blue-600 transition transform hover:scale-105 shadow-lg">
+                            ✏️ Edit
+                        </button>
+                        <button onclick="deleteTask('${task._id}')" class="px-4 py-2 bg-red-500 text-white rounded-xl text-sm font-bold hover:bg-red-600 transition transform hover:scale-105 shadow-lg">
+                            🗑️ Delete
+                        </button>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    async function addTask(e) {
+        e.preventDefault();
+        const title = document.getElementById('taskTitle').value;
+        const time = document.getElementById('taskTime').value;
+        const priority = document.getElementById('taskPriority').value;
+        const today = new Date().toISOString().split('T')[0];
+
+        try {
+            await tasksAPI.create({ title, date: today, time, priority });
+            e.target.reset();
+            await loadTasks();
+            showNotification('✅ Task added successfully!', 'success');
+        } catch (error) {
+            console.error('Error adding task:', error);
+            showNotification('Failed to add task', 'error');
+        }
+    }
+
+    async function toggleTask(id) {
+        const task = tasks.find(t => t._id === id);
+        if (task) {
+            try {
+                await tasksAPI.update(id, { completed: !task.completed });
+                await loadTasks();
+                if (!task.completed) {
+                    createConfetti();
+                    showNotification('🎉 Task completed! Great job!', 'success');
+                }
+            } catch (error) {
+                console.error('Error toggling task:', error);
+            }
+        }
+    }
+
+    function editTask(id) {
+        const task = tasks.find(t => t._id === id);
+        if (task) {
+            document.getElementById('taskTitle').value = task.title;
+            document.getElementById('taskTime').value = task.time;
+            document.getElementById('taskPriority').value = task.priority;
+            deleteTask(id);
+        }
+    }
+
+    async function deleteTask(id) {
+        if (confirm('Are you sure you want to delete this task?')) {
+            try {
+                await tasksAPI.delete(id);
+                await loadTasks();
+                showNotification('🗑️ Task deleted', 'info');
+            } catch (error) {
+                console.error('Error deleting task:', error);
+            }
+        }
+    }
+
+    function filterTasks(filter) {
+        currentFilter = filter;
+        ['filterAll', 'filterPending', 'filterCompleted'].forEach(btn => {
+            const button = document.getElementById(btn);
+            button.classList.remove('bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'text-white', 'shadow-lg');
+            button.classList.add('bg-gray-100', 'text-gray-700');
+        });
+        const activeButton = document.getElementById(`filter${filter.charAt(0).toUpperCase() + filter.slice(1)}`);
+        activeButton.classList.remove('bg-gray-100', 'text-gray-700');
+        activeButton.classList.add('bg-gradient-to-r', 'from-purple-600', 'to-indigo-600', 'text-white', 'shadow-lg');
+        renderTasks();
+    }
+
+    async function updateStats() {
+        try {
+            const response = await tasksAPI.getStats();
+            const stats = response.stats;
+            
+            animateValue('totalTasks', parseInt(document.getElementById('totalTasks').textContent), stats.totalTasks, 500);
+            animateValue('completedTasks', parseInt(document.getElementById('completedTasks').textContent), stats.completedTasks, 500);
+            animateValue('pendingTasks', parseInt(document.getElementById('pendingTasks').textContent), stats.pendingTasks, 500);
+            animateValue('totalPoints', parseInt(document.getElementById('totalPoints').textContent), stats.totalPoints, 500);
+        } catch (error) {
+            console.error('Error updating stats:', error);
+        }
+    }
+
+    function animateValue(id, start, end, duration) {
+        const element = document.getElementById(id);
+        const range = end - start;
+        const increment = range / (duration / 16);
+        let current = start;
+        
+        const timer = setInterval(() => {
+            current += increment;
+            if ((increment > 0 && current >= end) || (increment < 0 && current <= end)) {
+                current = end;
+                clearInterval(timer);
+            }
+            element.textContent = Math.round(current);
+        }, 16);
+    }
+
+    function createConfetti() {
+        const colors = ['#667eea', '#764ba2', '#f093fb', '#4facfe', '#00f2fe', '#ffd700'];
+        const container = document.getElementById('confettiContainer');
+        
+        for (let i = 0; i < 50; i++) {
+            setTimeout(() => {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                confetti.style.left = Math.random() * 100 + '%';
+                confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.animationDelay = Math.random() * 0.5 + 's';
+                container.appendChild(confetti);
+                setTimeout(() => confetti.remove(), 3000);
+            }, i * 30);
+        }
+    }
+
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `fixed top-20 right-4 bg-white px-6 py-4 rounded-2xl shadow-2xl z-50 transform translate-x-full transition-all duration-500 border-l-4 ${
+            type === 'success' ? 'border-green-500' : type === 'error' ? 'border-red-500' : 'border-blue-500'
+        }`;
+        notification.innerHTML = `<p class="font-bold text-gray-800">${message}</p>`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => notification.style.transform = 'translateX(0)', 100);
+        setTimeout(() => {
+            notification.style.transform = 'translateX(150%)';
+            setTimeout(() => notification.remove(), 500);
+        }, 3000);
+    }
+
+    function logout() {
+        if (confirm('Are you sure you want to logout?')) {
+            authAPI.logout();
+        }
+    }
+
+    // Load tasks on page load
+    loadTasks();
+</script>
+</body>
+</html>
